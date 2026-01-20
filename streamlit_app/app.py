@@ -1,7 +1,8 @@
+import os
 import streamlit as st
 import requests
 
-API_BASE_URL = "http://localhost:8000/api/v1"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 
 st.set_page_config(
     page_title="Embeddings Optimization Admin",
