@@ -71,8 +71,6 @@ async def chat_completions(request: ChatRequest):
             config["model"] = request.model
 
         # Call service
-        # Note: I need to update services to respect config['model'] if I go this route.
-        # I will do that.
         result = await service.chat_with_usage(request.messages, config=config)
         
         return ChatResponse(**result)

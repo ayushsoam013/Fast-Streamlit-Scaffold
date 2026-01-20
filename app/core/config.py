@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     GEMINI_GEN_MODEL: str = os.getenv("GEMINI_GEN_MODEL", "gemini-2.0-flash")
     LITELLM_API_KEY: str = os.getenv("LITELLM_API_KEY", "")
     
+    # LiteLLM default models (without litellm_proxy/ prefix - will be added in service layer)
+    LITELLM_DEFAULT_MODEL: str = os.getenv("LITELLM_DEFAULT_MODEL", "google/gemini-2.5-flash")
+    LITELLM_DEFAULT_EMBEDDING_MODEL: str = os.getenv("LITELLM_DEFAULT_EMBEDDING_MODEL", "google/text-embedding-004")
+    
     # Local Qdrant
     QDRANT_HOST: str = os.getenv("QDRANT_HOST", "localhost")
     QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", 6333))

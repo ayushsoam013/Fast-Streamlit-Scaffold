@@ -20,15 +20,7 @@ Welcome to the administration panel for the Embeddings Optimization POC.
 Use the sidebar to navigate between different tools.
 """)
 
-# Provider Selection
-try:
-    current_provider_resp = requests.get(f"{API_BASE_URL}/config/provider")
-    if current_provider_resp.status_code == 200:
-        current_provider = current_provider_resp.json().get("provider", "gemini")
-    else:
-        current_provider = "gemini"
-except:
-    current_provider = "gemini"
+current_provider = "litellm"
 
 provider_options = ["gemini", "litellm"]
 
@@ -37,6 +29,16 @@ selected_provider = st.sidebar.selectbox(
     options=provider_options, 
     index=provider_options.index(current_provider) if current_provider in provider_options else 0
 )
+
+# Provider Selection
+try:
+    current_provider_resp = requests.get(f"{API_BASE_URL}/config/provider")
+    if current_provider_resp.status_code == 200:
+        current_provider = current_provider_resp.json().get("provider", "litellm")
+    else:
+        current_provider = "litellm"
+except:
+    current_provider = "litellm"
 
 if selected_provider != current_provider:
     try:

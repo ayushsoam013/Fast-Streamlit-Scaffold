@@ -4,11 +4,33 @@ from typing import List, Dict, Optional, Any
 from app.core.config import settings
 
 class LiteLLMService:
-    def __init__(self, model_name: str = "litellm_proxy/google/gemini-2.5-flash", embedding_model: str = "litellm_proxy/google/text-embedding-004"):
-        self.model_name = model_name
-        self.embedding_model = embedding_model
+    def __init__(self, model_name: str = None, embedding_model: str = None):
+        # Read from environment variables or use defaults (without litellm_proxy/ prefix)
+        default_model = getattr(settings, 'LITELLM_DEFAULT_MODEL', 'google/gemini-2.5-flash')
+        default_embedding = getattr(settings, 'LITELLM_DEFAULT_EMBEDDING_MODEL', 'google/text-embedding-004')
+        
+        self.model_name = model_name or default_model
+        self.embedding_model = embedding_model or default_embedding
         self.api_base = "https://imllm.intermesh.net/v1"
         self.api_key = settings.LITELLM_API_KEY or settings.GEMINI_API_KEY # Fallback/Usage
+
+    def _ensure_litellm_proxy_prefix(self, model_name: str) -> str:
+        """
+        Ensure model name has litellm_proxy/ prefix.
+        
+        Args:
+            model_name: Model name from config or user input
+                       Examples: "google/gemini-2.5-flash", "litellm_proxy/google/gemini-2.5-flash"
+        
+        Returns:
+            Model name with litellm_proxy/ prefix
+            Example: "litellm_proxy/google/gemini-2.5-flash"
+        """
+        if model_name.startswith("litellm_proxy/"):
+            return model_name
+        else:
+            # Add prefix to model names from JSON config or user input
+            return f"litellm_proxy/{model_name}"
 
     async def generate_content(self, prompt: str, config: Optional[Dict[str, Any]] = None) -> str:
         """
@@ -16,8 +38,15 @@ class LiteLLMService:
         """
         messages = [{"role": "user", "content": prompt}]
         
+        model_name = self.model_name
+        if config and "model" in config:
+            model_name = config["model"]
+        
+        # Ensure litellm_proxy/ prefix
+        model_name = self._ensure_litellm_proxy_prefix(model_name)
+
         response = litellm.completion(
-            model=self.model_name,
+            model=model_name,
             messages=messages,
             api_base=self.api_base,
             api_key=self.api_key,
@@ -41,8 +70,15 @@ class LiteLLMService:
                 "content": content
             })
 
+        model_name = self.model_name
+        if config and "model" in config:
+            model_name = config["model"]
+        
+        # Ensure litellm_proxy/ prefix
+        model_name = self._ensure_litellm_proxy_prefix(model_name)
+
         response = litellm.completion(
-            model=self.model_name,
+            model=model_name,
             messages=formatted_messages,
             api_base=self.api_base,
             api_key=self.api_key,
@@ -83,6 +119,9 @@ class LiteLLMService:
                 kwargs["temperature"] = config["temperature"]
             if "model" in config:
                 model_name = config["model"]
+        
+        # Ensure litellm_proxy/ prefix
+        model_name = self._ensure_litellm_proxy_prefix(model_name)
 
         response = litellm.completion(
             model=model_name,
@@ -104,12 +143,16 @@ class LiteLLMService:
         return {
             "content": response.choices[0].message.content,
             "usage": usage,
-            "model": self.model_name
+            "model": model_name
         }
 
     def generate_embedding(self, text: str, dimension: int = 768) -> List[float]:
+        model_name = self.embedding_model
+        # Ensure litellm_proxy/ prefix
+        model_name = self._ensure_litellm_proxy_prefix(model_name)
+
         response = litellm.embedding(
-            model=self.embedding_model,
+            model=model_name,
             input=[text],
             api_base=self.api_base,
             api_key=self.api_key
@@ -117,8 +160,12 @@ class LiteLLMService:
         return response['data'][0]['embedding']
 
     def generate_batch_embeddings(self, texts: List[str], dimension: int = 768) -> List[List[float]]:
+        model_name = self.embedding_model
+        # Ensure litellm_proxy/ prefix
+        model_name = self._ensure_litellm_proxy_prefix(model_name)
+
         response = litellm.embedding(
-            model=self.embedding_model,
+            model=model_name,
             input=texts,
             api_base=self.api_base,
             api_key=self.api_key

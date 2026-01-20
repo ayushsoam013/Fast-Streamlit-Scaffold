@@ -54,7 +54,7 @@ if __name__ == "__main__":
     time.sleep(3)
     
     # 2. LiteLLM Basic
-    test_chat_completions(provider="litellm", model="openai/gpt-4o-mini")
+    test_chat_completions(provider="litellm", model="litellm_proxy/openai/gpt-4o-mini")
     time.sleep(3)
     
     # 3. Test with System Prompt
