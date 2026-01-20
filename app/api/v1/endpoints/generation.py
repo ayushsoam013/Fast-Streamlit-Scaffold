@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.models.dtos import GenerationRequest, GenerationResponse
-from app.services.gemini_gen_service import GeminiGenService
-from app.core.config import settings
+# Better: remove lines
 
 router = APIRouter()
 
@@ -11,8 +10,9 @@ async def generate_content(request: GenerationRequest):
     Generate content using Gemini generative models (e.g., Gemini 2.0 Flash).
     """
     try:
-        # Use provided model or default from settings
-        service = GeminiGenService(model_name=request.model)
+        # Use active provider from manager
+        from app.services.llm_manager import llm_manager
+        service = llm_manager.get_service()
         
         config = {
             "max_output_tokens": request.max_tokens,

@@ -7,3 +7,4 @@ qdrant-client
 google-genai
 pydantic-settings
 python-dotenv
+litellm

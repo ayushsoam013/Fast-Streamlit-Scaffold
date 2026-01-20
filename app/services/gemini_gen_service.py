@@ -37,6 +37,75 @@ class GeminiGenService:
         )
         return response.text
 
+    async def chat_with_usage(self, messages: List[Any], config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Chat interface returning content and usage.
+        """
+        formatted_messages = []
+        system_instruction = None
+        
+        for msg in messages:
+            if hasattr(msg, "model_dump"):
+                m = msg.model_dump()
+            elif isinstance(msg, dict):
+                m = msg
+            else:
+                m = {"role": "user", "content": str(msg)}
+            
+            role = m.get("role")
+            content = m.get("content")
+            
+            if role == "system":
+                system_instruction = content
+                continue
+                
+            if role == "assistant":
+                role = "model"
+            
+            formatted_messages.append(
+                types.Content(
+                    role=role,
+                    parts=[types.Part(text=content)] if isinstance(content, str) else content
+                )
+            )
+
+        model_name = self.model_name
+        
+        # Prepare Config
+        gen_config = None
+        if config or system_instruction:
+            cfg = config.copy() if config else {}
+            if "model" in cfg:
+                model_name = cfg.pop("model")
+            
+            # Map max_output_tokens to max_output_tokens (it is already)
+            # Map temperature to temperature (it is already)
+            
+            gen_config = types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                **cfg
+            )
+
+        response = self.client.models.generate_content(
+            model=model_name,
+            contents=formatted_messages,
+            config=gen_config
+        )
+        
+        usage = None
+        if response.usage_metadata:
+            usage = {
+                "prompt_tokens": response.usage_metadata.prompt_token_count,
+                "completion_tokens": response.usage_metadata.candidates_token_count,
+                "total_tokens": response.usage_metadata.total_token_count
+            }
+            
+        return {
+            "content": response.text,
+            "usage": usage,
+            "model": model_name
+        }
+
     def health_check(self) -> bool:
         try:
             # Quick ping

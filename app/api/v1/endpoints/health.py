@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from app.models.dtos import HealthResponse
-from app.services.gemini_service import gemini_service
 from app.repositories.qdrant_repo import qdrant_repo
 from app.core.config import settings
 
@@ -12,9 +11,12 @@ async def server_health():
 
 @router.get("/gemini", response_model=HealthResponse)
 async def gemini_health():
-    if gemini_service.health_check():
-        return HealthResponse(status="ok")
-    raise HTTPException(status_code=503, detail="Gemini service unavailable")
+    from app.services.llm_manager import llm_manager
+    # Check generation service of active provider
+    service = llm_manager.get_service()
+    if service.health_check():
+        return HealthResponse(status="ok", details={"provider": llm_manager.get_current_provider()})
+    raise HTTPException(status_code=503, detail=f"{llm_manager.get_current_provider()} service unavailable")
 
 @router.get("/qdrant", response_model=HealthResponse)
 async def qdrant_health():
@@ -24,7 +26,8 @@ async def qdrant_health():
 
 @router.get("/gemini-gen", response_model=HealthResponse)
 async def gemini_gen_health():
-    from app.services.gemini_gen_service import gemini_gen_service
-    if gemini_gen_service.health_check():
-        return HealthResponse(status="ok")
-    raise HTTPException(status_code=503, detail="Gemini Generative service unavailable")
+    from app.services.llm_manager import llm_manager
+    service = llm_manager.get_service()
+    if service.health_check():
+         return HealthResponse(status="ok", details={"provider": llm_manager.get_current_provider()})
+    raise HTTPException(status_code=503, detail="Service unavailable")

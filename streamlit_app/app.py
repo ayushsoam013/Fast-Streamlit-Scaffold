@@ -1,4 +1,7 @@
 import streamlit as st
+import requests
+
+API_BASE_URL = "http://localhost:8000/api/v1"
 
 st.set_page_config(
     page_title="Embeddings Optimization Admin",
@@ -16,5 +19,34 @@ Welcome to the administration panel for the Embeddings Optimization POC.
 
 Use the sidebar to navigate between different tools.
 """)
+
+# Provider Selection
+try:
+    current_provider_resp = requests.get(f"{API_BASE_URL}/config/provider")
+    if current_provider_resp.status_code == 200:
+        current_provider = current_provider_resp.json().get("provider", "gemini")
+    else:
+        current_provider = "gemini"
+except:
+    current_provider = "gemini"
+
+provider_options = ["gemini", "litellm"]
+
+selected_provider = st.sidebar.selectbox(
+    "Select LLM Provider", 
+    options=provider_options, 
+    index=provider_options.index(current_provider) if current_provider in provider_options else 0
+)
+
+if selected_provider != current_provider:
+    try:
+        response = requests.post(f"{API_BASE_URL}/config/provider", json={"provider": selected_provider})
+        if response.status_code == 200:
+            st.sidebar.success(f"Switched to {selected_provider}")
+            st.rerun()
+        else:
+            st.sidebar.error("Failed to switch provider")
+    except Exception as e:
+        st.sidebar.error(f"Error switching provider: {e}")
 
 st.sidebar.success("Select a tool above.")

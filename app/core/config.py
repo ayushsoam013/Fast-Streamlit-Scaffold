@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_GEN_MODEL: str = os.getenv("GEMINI_GEN_MODEL", "gemini-2.0-flash")
+    LITELLM_API_KEY: str = os.getenv("LITELLM_API_KEY", "")
     
     # Local Qdrant
     QDRANT_HOST: str = os.getenv("QDRANT_HOST", "localhost")

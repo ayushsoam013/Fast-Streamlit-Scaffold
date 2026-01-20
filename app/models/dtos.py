@@ -32,3 +32,24 @@ class GenerationRequest(BaseModel):
 class GenerationResponse(BaseModel):
     text: str
     model: str
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str | List[Any]
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    model: Optional[str] = None
+    provider: Optional[str] = None # "gemini" or "litellm"
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = None
+
+class TokenUsage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+class ChatResponse(BaseModel):
+    content: str
+    model: str
+    usage: Optional[TokenUsage] = None
